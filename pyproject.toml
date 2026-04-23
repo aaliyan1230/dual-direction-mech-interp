@@ -1,0 +1,52 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ddmi"
+version = "0.1.0"
+description = "Disentangling safety-refusal and epistemic-abstention directions in LLM activation space"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [{name = "Aaliyan Shaikh", email = "aaliyan1230@gmail.com"}]
+
+dependencies = [
+    "torch>=2.1",
+    "transformers>=4.44",
+    "accelerate>=0.27",
+    "bitsandbytes>=0.43",
+    "datasets>=2.18",
+    "pyyaml>=6.0",
+    "tqdm>=4.66",
+]
+
+[project.optional-dependencies]
+quant = [
+    "auto-gptq>=0.7",
+    "autoawq>=0.2",
+]
+plot = [
+    "matplotlib>=3.8",
+    "seaborn>=0.13",
+    "pandas>=2.1",
+]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.3",
+    "mypy>=1.8",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ddmi"]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+
+[tool.mypy]
+python_version = "3.9"
+strict = true
