@@ -1,0 +1,29 @@
+# Experiment configuration for Llama-3.1-8B-Instruct
+model:
+  model_id: meta-llama/Llama-3.1-8B-Instruct
+  load_in_4bit: true
+  torch_dtype: float16
+  attn_implementation: eager
+
+data:
+  safety_limit: 200
+  epistemic_limit: 200
+  seed: 42
+
+direction_extraction:
+  max_input_length: 512
+
+cross_ablation:
+  eval_prompts: 100
+  top_k_layers: 1
+  strength: 1.0
+  module_types:
+    - attn_out
+  max_new_tokens: 128
+
+quantization:
+  precisions:
+    - fp16
+    - bnb_nf4
+    - bnb_int8
+  prompt_limit: 100

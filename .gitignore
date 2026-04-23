@@ -33,3 +33,5 @@ artifacts/quantization/*.bin
 
 # Environment
 .env
+
+paper
