@@ -273,7 +273,6 @@ def main() -> None:
     baseline["condition"] = "baseline"
     baseline["ablated_direction"] = "none"
     baseline["elapsed_seconds"] = time.time() - t0
-    results.append(baseline)
     logger.info(
         "Baseline: safety_refusal=%.3f, epistemic_abstention=%.3f",
         baseline["safety_refusal_rate"], baseline["epistemic_abstention_rate"],
