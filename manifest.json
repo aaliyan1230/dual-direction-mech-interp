@@ -1,0 +1,38 @@
+{
+  "created_at_utc": "2026-04-24T15:05:47.628811+00:00",
+  "files": [
+    "artifacts/cross_ablation/meta_llama_Llama_3.1_8B_Instruct_results.json",
+    "artifacts/cross_ablation/meta_llama_Llama_3.1_8B_Instruct_sweep.json",
+    "artifacts/cross_model/Qwen_Qwen3_8B_comparison.json",
+    "artifacts/cross_model/combined_results.json",
+    "artifacts/directions/meta_llama_Llama_3.1_8B_Instruct_comparison.json",
+    "artifacts/directions/meta_llama_Llama_3.1_8B_Instruct_epistemic.json",
+    "artifacts/directions/meta_llama_Llama_3.1_8B_Instruct_safety.json",
+    "artifacts/figures/fig1_direction_comparison.pdf",
+    "artifacts/figures/fig1_direction_comparison.png",
+    "artifacts/figures/fig2_cross_ablation.pdf",
+    "artifacts/quantization/meta_llama_Llama_3.1_8B_Instruct_sweep.json",
+    "configs/experiment/llama31_8b.yaml",
+    "configs/experiment/phi4_mini.yaml",
+    "configs/experiment/qwen3_8b.yaml"
+  ],
+  "git_commit": "99a5d9dc75e4161d5b05956cb622f5116355f694",
+  "label": "meta_llama_Llama_3.1_8B_Instruct_with_cross_model",
+  "repo_root": "/kaggle/working/dual-direction-mech-interp",
+  "requested_paths": [],
+  "requested_patterns": [
+    "artifacts/directions/**/*.json",
+    "artifacts/cross_ablation/**/*.json",
+    "artifacts/quantization/**/*.json",
+    "artifacts/cross_model/**/*.json",
+    "artifacts/cross_model/**/*.csv",
+    "artifacts/cross_model/**/*.pdf",
+    "artifacts/cross_model/**/*.png",
+    "artifacts/figures/**/*.json",
+    "artifacts/figures/**/*.csv",
+    "artifacts/figures/**/*.pdf",
+    "artifacts/figures/**/*.png",
+    "artifacts/figures/**/*.svg",
+    "configs/**/*.yaml"
+  ]
+}

@@ -13,7 +13,7 @@ authors = [{name = "Aaliyan Shaikh", email = "aaliyan1230@gmail.com"}]
 
 dependencies = [
     "torch>=2.1",
-    "transformers>=4.44",
+    "transformers>=4.56",
     "accelerate>=0.27",
     "bitsandbytes>=0.43",
     "datasets>=2.18",
