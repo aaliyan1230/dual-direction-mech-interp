@@ -35,4 +35,4 @@ artifacts/quantization/*.bin
 .env
 
 # Research plan (private)
-RESEARCH_PLAN.md
+RESEARCH_PLAN.mdpaper/
