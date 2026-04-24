@@ -6,8 +6,8 @@ to test whether the safety↔epistemic relationship generalizes.
 
 Default models (all fit on T4×2 in 4-bit):
   - meta-llama/Llama-3.1-8B-Instruct
-  - Qwen/Qwen2.5-7B-Instruct
-  - google/gemma-2-2b-it
+    - Qwen/Qwen3-8B
+    - microsoft/Phi-4-mini-instruct
 
 Usage:
     python scripts/cross_model_replication.py \

@@ -20,7 +20,6 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import logging
 import sys
 import time
 from pathlib import Path
@@ -46,7 +45,7 @@ from ddmi.evaluation.detectors import (
     classify_responses,
     refusal_rate,
 )
-from ddmi.evaluation.metrics import CrossAblationMetrics
+from ddmi.evaluation.metrics import bootstrap_rate_ci
 from ddmi.models.generation import TextGenerationConfig, generate_batch
 from ddmi.models.loader import ModelLoadConfig, load_model_and_tokenizer
 from ddmi.utils.io import configure_logging, read_json, set_seed, write_json
@@ -60,6 +59,8 @@ def evaluate_condition(
     safety_prompts: List[str],
     epistemic_prompts: List[str],
     gen_config: TextGenerationConfig,
+    bootstrap_samples: int,
+    bootstrap_seed: int,
 ) -> Dict[str, Any]:
     """Evaluate refusal and abstention rates on both prompt sets."""
     # Generate responses
@@ -73,11 +74,36 @@ def evaluate_condition(
     safety_classes = classify_responses(safety_responses)
     epistemic_classes = classify_responses(epistemic_responses)
 
+    safety_refusal_labels = [label == "refusal" for label in safety_classes]
+    safety_abstention_labels = [label == "abstention" for label in safety_classes]
+    epistemic_refusal_labels = [label == "refusal" for label in epistemic_classes]
+    epistemic_abstention_labels = [label == "abstention" for label in epistemic_classes]
+
     return {
         "safety_refusal_rate": refusal_rate(safety_responses),
         "safety_abstention_rate": abstention_rate(safety_responses),
         "epistemic_refusal_rate": refusal_rate(epistemic_responses),
         "epistemic_abstention_rate": abstention_rate(epistemic_responses),
+        "safety_refusal_rate_ci_95": bootstrap_rate_ci(
+            safety_refusal_labels,
+            num_bootstrap=bootstrap_samples,
+            seed=bootstrap_seed,
+        ),
+        "safety_abstention_rate_ci_95": bootstrap_rate_ci(
+            safety_abstention_labels,
+            num_bootstrap=bootstrap_samples,
+            seed=bootstrap_seed + 1,
+        ),
+        "epistemic_refusal_rate_ci_95": bootstrap_rate_ci(
+            epistemic_refusal_labels,
+            num_bootstrap=bootstrap_samples,
+            seed=bootstrap_seed + 2,
+        ),
+        "epistemic_abstention_rate_ci_95": bootstrap_rate_ci(
+            epistemic_abstention_labels,
+            num_bootstrap=bootstrap_samples,
+            seed=bootstrap_seed + 3,
+        ),
         "safety_response_classes": {
             "refusal": safety_classes.count("refusal"),
             "abstention": safety_classes.count("abstention"),
@@ -135,6 +161,8 @@ def evaluate_ablation_run(
     epistemic_ranked: List[Dict[str, Any]],
     epistemic_directions: Dict[str, List[float]],
     strength: float,
+    bootstrap_samples: int,
+    bootstrap_seed: int,
 ) -> Dict[str, Any]:
     spec = EditSpec(strength=strength)
     results: List[Dict[str, Any]] = [dict(baseline)]
@@ -142,7 +170,15 @@ def evaluate_ablation_run(
     safety_ablator = build_ablator(safety_directions, spec).attach(model)
     try:
         t0 = time.time()
-        ablate_safety = evaluate_condition(model, tokenizer, safety_prompts, epistemic_prompts, gen_config)
+        ablate_safety = evaluate_condition(
+            model,
+            tokenizer,
+            safety_prompts,
+            epistemic_prompts,
+            gen_config,
+            bootstrap_samples,
+            bootstrap_seed + 10,
+        )
     finally:
         safety_ablator.close()
 
@@ -156,7 +192,15 @@ def evaluate_ablation_run(
     epistemic_ablator = build_ablator(epistemic_directions, spec).attach(model)
     try:
         t0 = time.time()
-        ablate_epistemic = evaluate_condition(model, tokenizer, safety_prompts, epistemic_prompts, gen_config)
+        ablate_epistemic = evaluate_condition(
+            model,
+            tokenizer,
+            safety_prompts,
+            epistemic_prompts,
+            gen_config,
+            bootstrap_samples,
+            bootstrap_seed + 20,
+        )
     finally:
         epistemic_ablator.close()
 
@@ -210,6 +254,7 @@ def main() -> None:
     parser.add_argument("--load-in-4bit", action="store_true")
     parser.add_argument("--load-in-8bit", action="store_true")
     parser.add_argument("--max-new-tokens", type=int, default=128)
+    parser.add_argument("--bootstrap-samples", type=int, default=2000)
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
@@ -269,7 +314,15 @@ def main() -> None:
     # === Condition 1: Baseline (no ablation) ===
     logger.info("\n=== Condition 1: BASELINE (no ablation) ===")
     t0 = time.time()
-    baseline = evaluate_condition(model, tokenizer, safety_prompts, epistemic_prompts, gen_config)
+    baseline = evaluate_condition(
+        model,
+        tokenizer,
+        safety_prompts,
+        epistemic_prompts,
+        gen_config,
+        args.bootstrap_samples,
+        args.seed,
+    )
     baseline["condition"] = "baseline"
     baseline["ablated_direction"] = "none"
     baseline["elapsed_seconds"] = time.time() - t0
@@ -303,6 +356,8 @@ def main() -> None:
                 epistemic_ranked=epistemic_ranked,
                 epistemic_directions=epistemic_directions,
                 strength=strength,
+                bootstrap_samples=args.bootstrap_samples,
+                bootstrap_seed=args.seed + top_k_layers * 100 + int(strength * 1000),
             )
             runs.append(run)
 
@@ -336,6 +391,7 @@ def main() -> None:
                 "strength": runs[0]["config"]["strength"],
                 "target_layers": runs[0]["config"]["target_layers"],
                 "max_new_tokens": args.max_new_tokens,
+                "bootstrap_samples": args.bootstrap_samples,
                 "seed": args.seed,
             },
             "results": runs[0]["results"],
@@ -353,6 +409,7 @@ def main() -> None:
                 "top_k_values": top_k_values,
                 "strength_values": strength_values,
                 "max_new_tokens": args.max_new_tokens,
+                "bootstrap_samples": args.bootstrap_samples,
                 "seed": args.seed,
             },
             "runs": runs,
