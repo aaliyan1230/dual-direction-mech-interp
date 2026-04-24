@@ -24,9 +24,11 @@ Thumbs.db
 
 # Artifacts (large files — track selectively)
 artifacts/activations/
+artifacts/from_kaggle/
 artifacts/quantization/*.bin
 *.safetensors
 *.bin
+ddmi_kaggle_export.zip
 
 # Notebooks
 .ipynb_checkpoints/
