@@ -12,7 +12,7 @@ This repository provides a reproducible pipeline to:
 4. **Probe** whether the extracted activations linearly separate the underlying task labels
 5. **Quantify** how deployment-time quantization (NF4, INT8, GPTQ-4bit, AWQ-4bit) perturbs these directions
 6. **Estimate** bootstrap confidence intervals for refusal and abstention rates
-7. **Replicate** findings across model families (Llama, Qwen, Phi-4-mini)
+7. **Replicate** findings across model families (Llama, Qwen, Gemma)
 
 ## Key Research Question
 
@@ -102,6 +102,8 @@ python scripts/cross_model_replication.py \
     --load-in-4bit
 ```
 
+The current default replication set covers three families total: Llama-3.1-8B-Instruct, Qwen3-8B, and the public 4-bit Gemma-2-9B-Instruct mirror `unsloth/gemma-2-9b-it-bnb-4bit`.
+
 ### Generate Figures
 
 ```bash
@@ -133,7 +135,7 @@ All experiments run on **2× NVIDIA T4 (16 GB each)** — designed for Kaggle fr
 - Llama-3.1-8B-Instruct in NF4: ~5 GB VRAM
 - Direction extraction (200 prompts): ~1 hour per model
 - Cross-ablation evaluation: ~2 hours per model
-- Full pipeline (directions, probe, ablation, quantization, 3-model replication): ~24 GPU-hours
+- Full pipeline (directions, probe, ablation, quantization, three-family replication): ~24 GPU-hours
 
 ## Datasets
 

@@ -4,10 +4,10 @@
 Runs direction extraction + comparison on multiple model families
 to test whether the safety↔epistemic relationship generalizes.
 
-Default models (all fit on T4×2 in 4-bit):
-  - meta-llama/Llama-3.1-8B-Instruct
+Default models (all fit on T4x2 in 4-bit):
+    - meta-llama/Llama-3.1-8B-Instruct
     - Qwen/Qwen3-8B
-    - microsoft/Phi-4-mini-instruct
+    - unsloth/gemma-2-9b-it-bnb-4bit
 
 Usage:
     python scripts/cross_model_replication.py \
@@ -53,7 +53,7 @@ logger = configure_logging(name="cross_model")
 DEFAULT_MODELS = [
     "meta-llama/Llama-3.1-8B-Instruct",
     "Qwen/Qwen3-8B",
-    "microsoft/Phi-4-mini-instruct",
+    "unsloth/gemma-2-9b-it-bnb-4bit",
 ]
 
 
