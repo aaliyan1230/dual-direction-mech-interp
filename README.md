@@ -9,8 +9,10 @@ This repository provides a reproducible pipeline to:
 1. **Extract** both safety-refusal and epistemic-abstention directions via difference-in-means on residual stream activations
 2. **Measure** their geometric relationship (cosine similarity, angular separation) across all layers
 3. **Cross-ablate** each direction and measure the behavioral impact on both safety refusal and epistemic abstention
-4. **Quantify** how deployment-time quantization (NF4, INT8, GPTQ-4bit, AWQ-4bit) perturbs these directions
-5. **Replicate** findings across model families (Llama, Qwen, Gemma)
+4. **Probe** whether the extracted activations linearly separate the underlying task labels
+5. **Quantify** how deployment-time quantization (NF4, INT8, GPTQ-4bit, AWQ-4bit) perturbs these directions
+6. **Estimate** bootstrap confidence intervals for refusal and abstention rates
+7. **Replicate** findings across model families (Llama, Qwen, Phi-4-mini)
 
 ## Key Research Question
 
@@ -67,8 +69,22 @@ python scripts/cross_ablation.py \
     --safety-direction artifacts/directions/llama31_8b_safety.json \
     --epistemic-direction artifacts/directions/llama31_8b_epistemic.json \
     --output artifacts/cross_ablation/llama31_8b_results.json \
+    --bootstrap-samples 2000 \
     --load-in-4bit
 ```
+
+### Experiment 2b: Linear Probe Check
+
+```bash
+python scripts/linear_probe.py \
+    --model-id meta-llama/Llama-3.1-8B-Instruct \
+    --direction-type epistemic \
+    --direction-artifact artifacts/directions/llama31_8b_epistemic.json \
+    --output artifacts/probes/llama31_8b_epistemic_probe.json \
+    --load-in-4bit
+```
+
+This trains a simple logistic regression probe on held-out activations to test whether the extracted feature is linearly real even when ablation is weak.
 
 ### Experiment 3: Quantization Perturbation
 
@@ -117,7 +133,7 @@ All experiments run on **2× NVIDIA T4 (16 GB each)** — designed for Kaggle fr
 - Llama-3.1-8B-Instruct in NF4: ~5 GB VRAM
 - Direction extraction (200 prompts): ~1 hour per model
 - Cross-ablation evaluation: ~2 hours per model
-- Full pipeline (all 4 experiments, 3 models): ~24 GPU-hours
+- Full pipeline (directions, probe, ablation, quantization, 3-model replication): ~24 GPU-hours
 
 ## Datasets
 

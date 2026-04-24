@@ -179,6 +179,10 @@ def plot_quantization_drift(sweep_path: str, output_dir: str) -> None:
         e_sep = [r["epistemic_separability"] for r in drift_table]
 
         x = np.arange(len(precisions))
+        sep_rows = [
+            row for row in drift_table
+            if row.get("safety_separability") is not None and row.get("epistemic_separability") is not None
+        ]
 
         # Left: cosine to FP16
         ax1.bar(x - 0.2, s_cos, 0.35, label="Safety", color="#F44336", alpha=0.85)
@@ -191,12 +195,17 @@ def plot_quantization_drift(sweep_path: str, output_dir: str) -> None:
         ax1.set_ylim(0, 1.1)
 
         # Right: separability
-        ax2.bar(x - 0.2, s_sep, 0.35, label="Safety", color="#F44336", alpha=0.85)
-        ax2.bar(x + 0.2, e_sep, 0.35, label="Epistemic", color="#4CAF50", alpha=0.85)
+        sep_precisions = [row["precision"] for row in sep_rows]
+        sep_safety = [row["safety_separability"] for row in sep_rows]
+        sep_epistemic = [row["epistemic_separability"] for row in sep_rows]
+        x_sep = np.arange(len(sep_precisions))
+
+        ax2.bar(x_sep - 0.2, sep_safety, 0.35, label="Safety", color="#F44336", alpha=0.85)
+        ax2.bar(x_sep + 0.2, sep_epistemic, 0.35, label="Epistemic", color="#4CAF50", alpha=0.85)
         ax2.set_ylabel("Separability score")
         ax2.set_title("Group Separability")
-        ax2.set_xticks(x)
-        ax2.set_xticklabels(precisions, rotation=30, ha="right")
+        ax2.set_xticks(x_sep)
+        ax2.set_xticklabels(sep_precisions, rotation=30, ha="right")
         ax2.legend()
 
         fig.suptitle(f"Quantization Effects — {data.get('model_id', 'Unknown')}", y=1.02)
