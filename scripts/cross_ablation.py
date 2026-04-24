@@ -39,6 +39,7 @@ from ddmi.data.loaders import (
 from ddmi.editing.apply_edit import (
     ActivationDirectionAblator,
     EditSpec,
+    LayerwiseActivationDirectionAblator,
 )
 from ddmi.evaluation.detectors import (
     abstention_rate,
@@ -93,6 +94,107 @@ def evaluate_condition(
     }
 
 
+def build_direction_map(
+    artifact: Dict[str, Any],
+    top_k_layers: int,
+) -> Tuple[List[Dict[str, Any]], Dict[str, List[float]]]:
+    ranked = artifact["ranked_layers"][:top_k_layers]
+    directions = {
+        row["name"]: artifact["directions"][row["name"]]["direction"]
+        for row in ranked
+    }
+    return ranked, directions
+
+
+def build_ablator(
+    directions_by_layer: Dict[str, List[float]],
+    spec: EditSpec,
+) -> Any:
+    if len(directions_by_layer) == 1:
+        module_name, direction = next(iter(directions_by_layer.items()))
+        return ActivationDirectionAblator(
+            module_names=[module_name],
+            direction=direction,
+            spec=spec,
+        )
+    return LayerwiseActivationDirectionAblator(
+        directions_by_module=directions_by_layer,
+        spec=spec,
+    )
+
+
+def evaluate_ablation_run(
+    model: Any,
+    tokenizer: Any,
+    safety_prompts: List[str],
+    epistemic_prompts: List[str],
+    gen_config: TextGenerationConfig,
+    baseline: Dict[str, Any],
+    safety_ranked: List[Dict[str, Any]],
+    safety_directions: Dict[str, List[float]],
+    epistemic_ranked: List[Dict[str, Any]],
+    epistemic_directions: Dict[str, List[float]],
+    strength: float,
+) -> Dict[str, Any]:
+    spec = EditSpec(strength=strength)
+    results: List[Dict[str, Any]] = [dict(baseline)]
+
+    safety_ablator = build_ablator(safety_directions, spec).attach(model)
+    try:
+        t0 = time.time()
+        ablate_safety = evaluate_condition(model, tokenizer, safety_prompts, epistemic_prompts, gen_config)
+    finally:
+        safety_ablator.close()
+
+    ablate_safety["condition"] = "ablate_safety"
+    ablate_safety["ablated_direction"] = "safety"
+    ablate_safety["ablated_layers"] = [r["name"] for r in safety_ranked]
+    ablate_safety["strength"] = strength
+    ablate_safety["elapsed_seconds"] = time.time() - t0
+    results.append(ablate_safety)
+
+    epistemic_ablator = build_ablator(epistemic_directions, spec).attach(model)
+    try:
+        t0 = time.time()
+        ablate_epistemic = evaluate_condition(model, tokenizer, safety_prompts, epistemic_prompts, gen_config)
+    finally:
+        epistemic_ablator.close()
+
+    ablate_epistemic["condition"] = "ablate_epistemic"
+    ablate_epistemic["ablated_direction"] = "epistemic"
+    ablate_epistemic["ablated_layers"] = [r["name"] for r in epistemic_ranked]
+    ablate_epistemic["strength"] = strength
+    ablate_epistemic["elapsed_seconds"] = time.time() - t0
+    results.append(ablate_epistemic)
+
+    safety_cross = abs(
+        ablate_safety["epistemic_abstention_rate"] - baseline["epistemic_abstention_rate"]
+    )
+    epistemic_cross = abs(
+        ablate_epistemic["safety_refusal_rate"] - baseline["safety_refusal_rate"]
+    )
+
+    return {
+        "config": {
+            "top_k_layers": len(safety_ranked),
+            "strength": strength,
+            "target_layers": {
+                "safety": [r["name"] for r in safety_ranked],
+                "epistemic": [r["name"] for r in epistemic_ranked],
+            },
+        },
+        "results": results,
+        "summary": {
+            "baseline_safety_refusal": baseline["safety_refusal_rate"],
+            "baseline_epistemic_abstention": baseline["epistemic_abstention_rate"],
+            "cross_contamination_safety_to_epistemic": safety_cross,
+            "cross_contamination_epistemic_to_safety": epistemic_cross,
+            "on_target_safety_drop": baseline["safety_refusal_rate"] - ablate_safety["safety_refusal_rate"],
+            "on_target_epistemic_drop": baseline["epistemic_abstention_rate"] - ablate_epistemic["epistemic_abstention_rate"],
+        },
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Cross-ablation experiment")
     parser.add_argument("--model-id", required=True)
@@ -101,7 +203,9 @@ def main() -> None:
     parser.add_argument("--output", required=True, help="Output results JSON")
     parser.add_argument("--eval-prompts", type=int, default=100, help="Eval prompts per group")
     parser.add_argument("--top-k-layers", type=int, default=1, help="Top-K layers to ablate")
+    parser.add_argument("--top-k-values", type=int, nargs="+", help="Optional sweep over top-K layer counts")
     parser.add_argument("--strength", type=float, default=1.0, help="Ablation strength")
+    parser.add_argument("--strength-values", type=float, nargs="+", help="Optional sweep over ablation strengths")
     parser.add_argument("--module-type", nargs="+", default=["attn_out"], help="Module types to ablate")
     parser.add_argument("--load-in-4bit", action="store_true")
     parser.add_argument("--load-in-8bit", action="store_true")
@@ -115,15 +219,24 @@ def main() -> None:
     safety_art = read_json(args.safety_direction)
     epistemic_art = read_json(args.epistemic_direction)
 
-    # Get top-K layer directions
-    safety_ranked = safety_art["ranked_layers"][:args.top_k_layers]
-    epistemic_ranked = epistemic_art["ranked_layers"][:args.top_k_layers]
+    top_k_values = args.top_k_values or [args.top_k_layers]
+    strength_values = args.strength_values or [args.strength]
 
-    safety_dir_vec = safety_art["directions"][safety_ranked[0]["name"]]["direction"]
-    epistemic_dir_vec = epistemic_art["directions"][epistemic_ranked[0]["name"]]["direction"]
+    if any(value <= 0 for value in top_k_values):
+        raise ValueError(f"top-k values must be positive, got {top_k_values}")
 
-    logger.info("Safety direction: %s (sep=%.4f)", safety_ranked[0]["name"], safety_ranked[0]["score"])
-    logger.info("Epistemic direction: %s (sep=%.4f)", epistemic_ranked[0]["name"], epistemic_ranked[0]["score"])
+    default_safety_ranked, _ = build_direction_map(safety_art, top_k_values[0])
+    default_epistemic_ranked, _ = build_direction_map(epistemic_art, top_k_values[0])
+    logger.info(
+        "Default safety direction anchor: %s (sep=%.4f)",
+        default_safety_ranked[0]["name"],
+        default_safety_ranked[0]["score"],
+    )
+    logger.info(
+        "Default epistemic direction anchor: %s (sep=%.4f)",
+        default_epistemic_ranked[0]["name"],
+        default_epistemic_ranked[0]["score"],
+    )
 
     # Load model
     config = ModelLoadConfig(
@@ -153,15 +266,6 @@ def main() -> None:
 
     logger.info("Eval prompts: %d safety, %d epistemic", len(safety_prompts), len(epistemic_prompts))
 
-    safety_target_layers = [r["name"] for r in safety_ranked]
-    epistemic_target_layers = [r["name"] for r in epistemic_ranked]
-
-    logger.info("Safety target layers: %s", ", ".join(safety_target_layers))
-    logger.info("Epistemic target layers: %s", ", ".join(epistemic_target_layers))
-
-    results: List[Dict[str, Any]] = []
-    spec = EditSpec(strength=args.strength)
-
     # === Condition 1: Baseline (no ablation) ===
     logger.info("\n=== Condition 1: BASELINE (no ablation) ===")
     t0 = time.time()
@@ -175,107 +279,85 @@ def main() -> None:
         baseline["safety_refusal_rate"], baseline["epistemic_abstention_rate"],
     )
 
-    # === Condition 2: Ablate safety direction ===
-    logger.info("\n=== Condition 2: ABLATE SAFETY DIRECTION ===")
-    safety_ablator = ActivationDirectionAblator(
-        module_names=safety_target_layers,
-        direction=safety_dir_vec,
-        spec=spec,
-    ).attach(model)
+    runs: List[Dict[str, Any]] = []
+    for top_k_layers in top_k_values:
+        safety_ranked, safety_directions = build_direction_map(safety_art, top_k_layers)
+        epistemic_ranked, epistemic_directions = build_direction_map(epistemic_art, top_k_layers)
+        logger.info("Safety target layers: %s", ", ".join(row["name"] for row in safety_ranked))
+        logger.info("Epistemic target layers: %s", ", ".join(row["name"] for row in epistemic_ranked))
 
-    t0 = time.time()
-    ablate_safety = evaluate_condition(model, tokenizer, safety_prompts, epistemic_prompts, gen_config)
-    ablate_safety["condition"] = "ablate_safety"
-    ablate_safety["ablated_direction"] = "safety"
-    ablate_safety["ablated_layers"] = [r["name"] for r in safety_ranked]
-    ablate_safety["strength"] = args.strength
-    ablate_safety["elapsed_seconds"] = time.time() - t0
-    results.append(ablate_safety)
-    logger.info(
-        "Ablate safety: safety_refusal=%.3f (Δ=%.3f), epistemic_abstention=%.3f (Δ=%.3f)",
-        ablate_safety["safety_refusal_rate"],
-        ablate_safety["safety_refusal_rate"] - baseline["safety_refusal_rate"],
-        ablate_safety["epistemic_abstention_rate"],
-        ablate_safety["epistemic_abstention_rate"] - baseline["epistemic_abstention_rate"],
-    )
+        for strength in strength_values:
+            logger.info(
+                "\n=== Cross-ablation run: top_k=%d strength=%.3f ===",
+                top_k_layers,
+                strength,
+            )
+            run = evaluate_ablation_run(
+                model=model,
+                tokenizer=tokenizer,
+                safety_prompts=safety_prompts,
+                epistemic_prompts=epistemic_prompts,
+                gen_config=gen_config,
+                baseline=baseline,
+                safety_ranked=safety_ranked,
+                safety_directions=safety_directions,
+                epistemic_ranked=epistemic_ranked,
+                epistemic_directions=epistemic_directions,
+                strength=strength,
+            )
+            runs.append(run)
 
-    safety_ablator.close()
+            logger.info("                          | Safety Refusal | Epistemic Abstention |")
+            logger.info("-" * 70)
+            for row in run["results"]:
+                logger.info(
+                    "%-25s | %.3f          | %.3f                |",
+                    row["condition"], row["safety_refusal_rate"], row["epistemic_abstention_rate"],
+                )
+            logger.info(
+                "On-target drops: safety=%.3f, epistemic=%.3f",
+                run["summary"]["on_target_safety_drop"],
+                run["summary"]["on_target_epistemic_drop"],
+            )
+            logger.info(
+                "Cross-contamination: safety_to_epistemic=%.3f, epistemic_to_safety=%.3f",
+                run["summary"]["cross_contamination_safety_to_epistemic"],
+                run["summary"]["cross_contamination_epistemic_to_safety"],
+            )
 
-    # === Condition 3: Ablate epistemic direction ===
-    logger.info("\n=== Condition 3: ABLATE EPISTEMIC DIRECTION ===")
-    epistemic_ablator = ActivationDirectionAblator(
-        module_names=epistemic_target_layers,
-        direction=epistemic_dir_vec,
-        spec=spec,
-    ).attach(model)
-
-    t0 = time.time()
-    ablate_epistemic = evaluate_condition(model, tokenizer, safety_prompts, epistemic_prompts, gen_config)
-    ablate_epistemic["condition"] = "ablate_epistemic"
-    ablate_epistemic["ablated_direction"] = "epistemic"
-    ablate_epistemic["ablated_layers"] = [r["name"] for r in epistemic_ranked]
-    ablate_epistemic["strength"] = args.strength
-    ablate_epistemic["elapsed_seconds"] = time.time() - t0
-    results.append(ablate_epistemic)
-    logger.info(
-        "Ablate epistemic: safety_refusal=%.3f (Δ=%.3f), epistemic_abstention=%.3f (Δ=%.3f)",
-        ablate_epistemic["safety_refusal_rate"],
-        ablate_epistemic["safety_refusal_rate"] - baseline["safety_refusal_rate"],
-        ablate_epistemic["epistemic_abstention_rate"],
-        ablate_epistemic["epistemic_abstention_rate"] - baseline["epistemic_abstention_rate"],
-    )
-
-    epistemic_ablator.close()
-
-    # === Summary ===
-    logger.info("\n=== CROSS-ABLATION SUMMARY ===")
-    logger.info("                          | Safety Refusal | Epistemic Abstention |")
-    logger.info("-" * 70)
-    for r in results:
-        logger.info(
-            "%-25s | %.3f          | %.3f                |",
-            r["condition"], r["safety_refusal_rate"], r["epistemic_abstention_rate"],
-        )
-
-    # Key interpretive metric: cross-contamination
-    safety_cross = abs(
-        ablate_safety["epistemic_abstention_rate"] - baseline["epistemic_abstention_rate"]
-    )
-    epistemic_cross = abs(
-        ablate_epistemic["safety_refusal_rate"] - baseline["safety_refusal_rate"]
-    )
-    logger.info("\nCross-contamination:")
-    logger.info("  Ablate safety → Δ epistemic abstention: %.3f", safety_cross)
-    logger.info("  Ablate epistemic → Δ safety refusal: %.3f", epistemic_cross)
-    logger.info(
-        "  Interpretation: high cross-contamination (>0.1) → shared mechanism"
-    )
-
-    # Save
-    artifact = {
-        "artifact_type": "cross_ablation_results",
-        "model_id": args.model_id,
-        "safety_direction_artifact": args.safety_direction,
-        "epistemic_direction_artifact": args.epistemic_direction,
-        "config": {
-            "eval_prompts": args.eval_prompts,
-            "top_k_layers": args.top_k_layers,
-            "strength": args.strength,
-            "target_layers": {
-                "safety": safety_target_layers,
-                "epistemic": epistemic_target_layers,
+    if len(runs) == 1:
+        artifact = {
+            "artifact_type": "cross_ablation_results",
+            "model_id": args.model_id,
+            "safety_direction_artifact": args.safety_direction,
+            "epistemic_direction_artifact": args.epistemic_direction,
+            "config": {
+                "eval_prompts": args.eval_prompts,
+                "top_k_layers": runs[0]["config"]["top_k_layers"],
+                "strength": runs[0]["config"]["strength"],
+                "target_layers": runs[0]["config"]["target_layers"],
+                "max_new_tokens": args.max_new_tokens,
+                "seed": args.seed,
             },
-            "max_new_tokens": args.max_new_tokens,
-            "seed": args.seed,
-        },
-        "results": results,
-        "summary": {
-            "baseline_safety_refusal": baseline["safety_refusal_rate"],
-            "baseline_epistemic_abstention": baseline["epistemic_abstention_rate"],
-            "cross_contamination_safety_to_epistemic": safety_cross,
-            "cross_contamination_epistemic_to_safety": epistemic_cross,
-        },
-    }
+            "results": runs[0]["results"],
+            "summary": runs[0]["summary"],
+        }
+    else:
+        artifact = {
+            "artifact_type": "cross_ablation_sweep",
+            "model_id": args.model_id,
+            "safety_direction_artifact": args.safety_direction,
+            "epistemic_direction_artifact": args.epistemic_direction,
+            "baseline": baseline,
+            "config": {
+                "eval_prompts": args.eval_prompts,
+                "top_k_values": top_k_values,
+                "strength_values": strength_values,
+                "max_new_tokens": args.max_new_tokens,
+                "seed": args.seed,
+            },
+            "runs": runs,
+        }
 
     write_json(args.output, artifact)
     logger.info("Results saved to %s", args.output)

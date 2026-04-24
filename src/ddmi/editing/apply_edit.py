@@ -92,6 +92,40 @@ class ActivationDirectionAblator:
         self._hooks.clear()
 
 
+@dataclass
+class LayerwiseActivationDirectionAblator:
+    """Apply per-layer directional ablation to module activations via forward hooks."""
+
+    directions_by_module: Dict[str, Sequence[float]]
+    spec: EditSpec = field(default_factory=EditSpec)
+    _hooks: List[Any] = field(default_factory=list)
+
+    def attach(self, model: Any) -> "LayerwiseActivationDirectionAblator":
+        modules = dict(model.named_modules())
+        for module_name, direction in self.directions_by_module.items():
+            if module_name not in modules:
+                raise KeyError(f"Module '{module_name}' not found in model")
+            module = modules[module_name]
+
+            def hook(
+                _module: Any,
+                _inputs: Any,
+                output: Any,
+                layer_direction: Sequence[float] = direction,
+                name: str = module_name,
+            ) -> Any:
+                del name
+                return apply_directional_ablation_output(output, layer_direction, self.spec)
+
+            self._hooks.append(module.register_forward_hook(hook))
+        return self
+
+    def close(self) -> None:
+        for hook in self._hooks:
+            hook.remove()
+        self._hooks.clear()
+
+
 def apply_directional_ablation_tensor(
     matrix: torch.Tensor,
     direction: Sequence[float],
