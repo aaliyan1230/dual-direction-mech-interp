@@ -1,7 +1,8 @@
 {
   "artifact_type": "cross_model_replication",
   "models": [
-    "Qwen/Qwen3-8B"
+    "Qwen/Qwen3-8B",
+    "unsloth/gemma-2-9b-it-bnb-4bit"
   ],
   "prompt_limit": 50,
   "results": [
@@ -334,7 +335,7 @@
         }
       ],
       "cosine_at_top_safety": -0.0392825346440682,
-      "elapsed_seconds": 160.6659698486328,
+      "elapsed_seconds": 111.6779146194458,
       "epistemic_top5": [
         {
           "name": "model.layers.14",
@@ -385,6 +386,441 @@
       "top_epistemic_sep": 1.4374137765777917,
       "top_safety_layer": "model.layers.24",
       "top_safety_sep": 0.8521798534667046
+    },
+    {
+      "angle_at_top_safety": 82.93974354227383,
+      "comparisons": [
+        {
+          "angular_distance_deg": 78.73909951535619,
+          "cosine_similarity": 0.19527691224361324,
+          "epistemic_separability": 1.7767138336490509,
+          "layer_depth_frac": 0.0,
+          "layer_index": 0,
+          "layer_name": "model.layers.0",
+          "safety_separability": 0.2491421051712658
+        },
+        {
+          "angular_distance_deg": 87.36266536573213,
+          "cosine_similarity": 0.04601391995628229,
+          "epistemic_separability": 1.400560304213102,
+          "layer_depth_frac": 0.023809523809523808,
+          "layer_index": 1,
+          "layer_name": "model.layers.1",
+          "safety_separability": 0.3427558453965696
+        },
+        {
+          "angular_distance_deg": 86.59373688069017,
+          "cosine_similarity": 0.0594154928667925,
+          "epistemic_separability": 1.4758549649804056,
+          "layer_depth_frac": 0.047619047619047616,
+          "layer_index": 2,
+          "layer_name": "model.layers.2",
+          "safety_separability": 0.3501325369456424
+        },
+        {
+          "angular_distance_deg": 90.02574911015968,
+          "cosine_similarity": -0.00044940673661760867,
+          "epistemic_separability": 1.3993560570112136,
+          "layer_depth_frac": 0.07142857142857142,
+          "layer_index": 3,
+          "layer_name": "model.layers.3",
+          "safety_separability": 0.3689722262038239
+        },
+        {
+          "angular_distance_deg": 87.65998328212923,
+          "cosine_similarity": 0.04082964351709022,
+          "epistemic_separability": 1.1024778728756754,
+          "layer_depth_frac": 0.09523809523809523,
+          "layer_index": 4,
+          "layer_name": "model.layers.4",
+          "safety_separability": 0.4008337674359498
+        },
+        {
+          "angular_distance_deg": 88.49816010746224,
+          "cosine_similarity": 0.02620904947299485,
+          "epistemic_separability": 1.2612155398387526,
+          "layer_depth_frac": 0.11904761904761904,
+          "layer_index": 5,
+          "layer_name": "model.layers.5",
+          "safety_separability": 0.40649149206664426
+        },
+        {
+          "angular_distance_deg": 90.1020036886974,
+          "cosine_similarity": -0.0017802992765147364,
+          "epistemic_separability": 1.091068109330082,
+          "layer_depth_frac": 0.14285714285714285,
+          "layer_index": 6,
+          "layer_name": "model.layers.6",
+          "safety_separability": 0.3888110512532092
+        },
+        {
+          "angular_distance_deg": 91.46405136744443,
+          "cosine_similarity": -0.025549736198801475,
+          "epistemic_separability": 1.2115384182168085,
+          "layer_depth_frac": 0.16666666666666666,
+          "layer_index": 7,
+          "layer_name": "model.layers.7",
+          "safety_separability": 0.396328639494776
+        },
+        {
+          "angular_distance_deg": 89.25469307908325,
+          "cosine_similarity": 0.013007692862867834,
+          "epistemic_separability": 1.1921709247398704,
+          "layer_depth_frac": 0.19047619047619047,
+          "layer_index": 8,
+          "layer_name": "model.layers.8",
+          "safety_separability": 0.4297118551559428
+        },
+        {
+          "angular_distance_deg": 83.54963364406744,
+          "cosine_similarity": 0.11234246940343368,
+          "epistemic_separability": 1.3613659091656434,
+          "layer_depth_frac": 0.21428571428571427,
+          "layer_index": 9,
+          "layer_name": "model.layers.9",
+          "safety_separability": 0.4129592298648829
+        },
+        {
+          "angular_distance_deg": 85.91280506893096,
+          "cosine_similarity": 0.07127452389616609,
+          "epistemic_separability": 1.139406134082978,
+          "layer_depth_frac": 0.23809523809523808,
+          "layer_index": 10,
+          "layer_name": "model.layers.10",
+          "safety_separability": 0.45578771336771173
+        },
+        {
+          "angular_distance_deg": 86.50250685154646,
+          "cosine_similarity": 0.06100486827091007,
+          "epistemic_separability": 1.2091836191045584,
+          "layer_depth_frac": 0.2619047619047619,
+          "layer_index": 11,
+          "layer_name": "model.layers.11",
+          "safety_separability": 0.4424793637469828
+        },
+        {
+          "angular_distance_deg": 88.32154845347527,
+          "cosine_similarity": 0.02929031606690006,
+          "epistemic_separability": 1.178957037689053,
+          "layer_depth_frac": 0.2857142857142857,
+          "layer_index": 12,
+          "layer_name": "model.layers.12",
+          "safety_separability": 0.45685983546107856
+        },
+        {
+          "angular_distance_deg": 85.8269061925931,
+          "cosine_similarity": 0.07276984854539369,
+          "epistemic_separability": 1.1331966339704906,
+          "layer_depth_frac": 0.30952380952380953,
+          "layer_index": 13,
+          "layer_name": "model.layers.13",
+          "safety_separability": 0.536589211089989
+        },
+        {
+          "angular_distance_deg": 85.48515041122488,
+          "cosine_similarity": 0.07871746835893169,
+          "epistemic_separability": 1.0403711074393869,
+          "layer_depth_frac": 0.3333333333333333,
+          "layer_index": 14,
+          "layer_name": "model.layers.14",
+          "safety_separability": 0.5400491850795486
+        },
+        {
+          "angular_distance_deg": 85.63256100835113,
+          "cosine_similarity": 0.07615239387667348,
+          "epistemic_separability": 1.0301588828134063,
+          "layer_depth_frac": 0.35714285714285715,
+          "layer_index": 15,
+          "layer_name": "model.layers.15",
+          "safety_separability": 0.5435014230541271
+        },
+        {
+          "angular_distance_deg": 86.05404164090638,
+          "cosine_similarity": 0.06881553588666628,
+          "epistemic_separability": 0.9069576881360862,
+          "layer_depth_frac": 0.38095238095238093,
+          "layer_index": 16,
+          "layer_name": "model.layers.16",
+          "safety_separability": 0.5636976697725934
+        },
+        {
+          "angular_distance_deg": 84.58804905587358,
+          "cosine_similarity": 0.09431596889337729,
+          "epistemic_separability": 0.9045700179833942,
+          "layer_depth_frac": 0.40476190476190477,
+          "layer_index": 17,
+          "layer_name": "model.layers.17",
+          "safety_separability": 0.5972951418608236
+        },
+        {
+          "angular_distance_deg": 84.7741095101108,
+          "cosine_similarity": 0.09108258548836815,
+          "epistemic_separability": 0.9044449195574399,
+          "layer_depth_frac": 0.42857142857142855,
+          "layer_index": 18,
+          "layer_name": "model.layers.18",
+          "safety_separability": 0.5943393612948334
+        },
+        {
+          "angular_distance_deg": 84.12468305089624,
+          "cosine_similarity": 0.10236400878341383,
+          "epistemic_separability": 0.8914910221558104,
+          "layer_depth_frac": 0.4523809523809524,
+          "layer_index": 19,
+          "layer_name": "model.layers.19",
+          "safety_separability": 0.6107902573157294
+        },
+        {
+          "angular_distance_deg": 82.81503857023712,
+          "cosine_similarity": 0.12507282635922018,
+          "epistemic_separability": 0.8551427792492569,
+          "layer_depth_frac": 0.47619047619047616,
+          "layer_index": 20,
+          "layer_name": "model.layers.20",
+          "safety_separability": 0.5890762016690503
+        },
+        {
+          "angular_distance_deg": 81.4973563403873,
+          "cosine_similarity": 0.14785504472253305,
+          "epistemic_separability": 0.827876102640365,
+          "layer_depth_frac": 0.5,
+          "layer_index": 21,
+          "layer_name": "model.layers.21",
+          "safety_separability": 0.602796917464245
+        },
+        {
+          "angular_distance_deg": 77.48241583290893,
+          "cosine_similarity": 0.21673923055866268,
+          "epistemic_separability": 0.8564755454811097,
+          "layer_depth_frac": 0.5238095238095238,
+          "layer_index": 22,
+          "layer_name": "model.layers.22",
+          "safety_separability": 0.6003553812648746
+        },
+        {
+          "angular_distance_deg": 76.67071637937153,
+          "cosine_similarity": 0.2305470945566479,
+          "epistemic_separability": 0.7926318528006095,
+          "layer_depth_frac": 0.5476190476190477,
+          "layer_index": 23,
+          "layer_name": "model.layers.23",
+          "safety_separability": 0.6298562227051934
+        },
+        {
+          "angular_distance_deg": 77.16484250722742,
+          "cosine_similarity": 0.2221468211743417,
+          "epistemic_separability": 0.7391180167767069,
+          "layer_depth_frac": 0.5714285714285714,
+          "layer_index": 24,
+          "layer_name": "model.layers.24",
+          "safety_separability": 0.637202893421283
+        },
+        {
+          "angular_distance_deg": 77.62400557042727,
+          "cosine_similarity": 0.21432610584999948,
+          "epistemic_separability": 0.6557245131914532,
+          "layer_depth_frac": 0.5952380952380952,
+          "layer_index": 25,
+          "layer_name": "model.layers.25",
+          "safety_separability": 0.6639963777000062
+        },
+        {
+          "angular_distance_deg": 80.15334547810806,
+          "cosine_similarity": 0.17101183568342204,
+          "epistemic_separability": 0.633126103943655,
+          "layer_depth_frac": 0.6190476190476191,
+          "layer_index": 26,
+          "layer_name": "model.layers.26",
+          "safety_separability": 0.6899471345559369
+        },
+        {
+          "angular_distance_deg": 81.99727911749554,
+          "cosine_similarity": 0.13922012700794476,
+          "epistemic_separability": 0.6571154902748358,
+          "layer_depth_frac": 0.6428571428571429,
+          "layer_index": 27,
+          "layer_name": "model.layers.27",
+          "safety_separability": 0.7323117348935799
+        },
+        {
+          "angular_distance_deg": 82.98386645392482,
+          "cosine_similarity": 0.12214882318832086,
+          "epistemic_separability": 0.6449474168328345,
+          "layer_depth_frac": 0.6666666666666666,
+          "layer_index": 28,
+          "layer_name": "model.layers.28",
+          "safety_separability": 0.7414284453655534
+        },
+        {
+          "angular_distance_deg": 83.79675243398754,
+          "cosine_similarity": 0.10805570472453008,
+          "epistemic_separability": 0.6326146692118337,
+          "layer_depth_frac": 0.6904761904761905,
+          "layer_index": 29,
+          "layer_name": "model.layers.29",
+          "safety_separability": 0.7697419936426775
+        },
+        {
+          "angular_distance_deg": 84.36990380279104,
+          "cosine_similarity": 0.09810565706583876,
+          "epistemic_separability": 0.6301454696805686,
+          "layer_depth_frac": 0.7142857142857143,
+          "layer_index": 30,
+          "layer_name": "model.layers.30",
+          "safety_separability": 0.7707311009572769
+        },
+        {
+          "angular_distance_deg": 85.40513294648652,
+          "cosine_similarity": 0.08010962576065468,
+          "epistemic_separability": 0.603726957531033,
+          "layer_depth_frac": 0.7380952380952381,
+          "layer_index": 31,
+          "layer_name": "model.layers.31",
+          "safety_separability": 0.733044811598595
+        },
+        {
+          "angular_distance_deg": 86.5601866999812,
+          "cosine_similarity": 0.06000000927719701,
+          "epistemic_separability": 0.5784716321845013,
+          "layer_depth_frac": 0.7619047619047619,
+          "layer_index": 32,
+          "layer_name": "model.layers.32",
+          "safety_separability": 0.7362699284545712
+        },
+        {
+          "angular_distance_deg": 86.34608270252336,
+          "cosine_similarity": 0.06372966903714956,
+          "epistemic_separability": 0.5512056123272527,
+          "layer_depth_frac": 0.7857142857142857,
+          "layer_index": 33,
+          "layer_name": "model.layers.33",
+          "safety_separability": 0.7601055918075922
+        },
+        {
+          "angular_distance_deg": 86.21818555192392,
+          "cosine_similarity": 0.06595719711872579,
+          "epistemic_separability": 0.54294902588143,
+          "layer_depth_frac": 0.8095238095238095,
+          "layer_index": 34,
+          "layer_name": "model.layers.34",
+          "safety_separability": 0.7792709860093511
+        },
+        {
+          "angular_distance_deg": 82.93974354227383,
+          "cosine_similarity": 0.12291311038543512,
+          "epistemic_separability": 0.5333037322121427,
+          "layer_depth_frac": 0.8333333333333334,
+          "layer_index": 35,
+          "layer_name": "model.layers.35",
+          "safety_separability": 0.7886328870124467
+        },
+        {
+          "angular_distance_deg": 82.53308122354228,
+          "cosine_similarity": 0.1299537337581724,
+          "epistemic_separability": 0.5307509269473005,
+          "layer_depth_frac": 0.8571428571428571,
+          "layer_index": 36,
+          "layer_name": "model.layers.36",
+          "safety_separability": 0.77531478836168
+        },
+        {
+          "angular_distance_deg": 82.54326732821109,
+          "cosine_similarity": 0.12977745821397735,
+          "epistemic_separability": 0.509228118540669,
+          "layer_depth_frac": 0.8809523809523809,
+          "layer_index": 37,
+          "layer_name": "model.layers.37",
+          "safety_separability": 0.7604508570589538
+        },
+        {
+          "angular_distance_deg": 81.64026110758451,
+          "cosine_similarity": 0.14538784187835999,
+          "epistemic_separability": 0.5234622691018169,
+          "layer_depth_frac": 0.9047619047619048,
+          "layer_index": 38,
+          "layer_name": "model.layers.38",
+          "safety_separability": 0.7693727583141287
+        },
+        {
+          "angular_distance_deg": 81.43021511886572,
+          "cosine_similarity": 0.1490138987264372,
+          "epistemic_separability": 0.4901060916702475,
+          "layer_depth_frac": 0.9285714285714286,
+          "layer_index": 39,
+          "layer_name": "model.layers.39",
+          "safety_separability": 0.7332290115637933
+        },
+        {
+          "angular_distance_deg": 77.94829180007443,
+          "cosine_similarity": 0.2087943630513026,
+          "epistemic_separability": 0.5165490390141507,
+          "layer_depth_frac": 0.9523809523809523,
+          "layer_index": 40,
+          "layer_name": "model.layers.40",
+          "safety_separability": 0.7167794475505683
+        },
+        {
+          "angular_distance_deg": 71.7475955690517,
+          "cosine_similarity": 0.3132036605565949,
+          "epistemic_separability": 0.7413874534565906,
+          "layer_depth_frac": 0.9761904761904762,
+          "layer_index": 41,
+          "layer_name": "model.layers.41",
+          "safety_separability": 0.6819860547180662
+        }
+      ],
+      "cosine_at_top_safety": 0.12291311038543512,
+      "elapsed_seconds": 141.22651743888855,
+      "epistemic_top5": [
+        {
+          "name": "model.layers.0",
+          "score": 1.7767138336490509
+        },
+        {
+          "name": "model.layers.2",
+          "score": 1.4758549649804056
+        },
+        {
+          "name": "model.layers.1",
+          "score": 1.400560304213102
+        },
+        {
+          "name": "model.layers.3",
+          "score": 1.3993560570112136
+        },
+        {
+          "name": "model.layers.9",
+          "score": 1.3613659091656434
+        }
+      ],
+      "model_id": "unsloth/gemma-2-9b-it-bnb-4bit",
+      "num_layers": 42,
+      "safety_top5": [
+        {
+          "name": "model.layers.35",
+          "score": 0.7886328870124467
+        },
+        {
+          "name": "model.layers.34",
+          "score": 0.7792709860093511
+        },
+        {
+          "name": "model.layers.36",
+          "score": 0.77531478836168
+        },
+        {
+          "name": "model.layers.30",
+          "score": 0.7707311009572769
+        },
+        {
+          "name": "model.layers.29",
+          "score": 0.7697419936426775
+        }
+      ],
+      "top_epistemic_layer": "model.layers.0",
+      "top_epistemic_sep": 1.7767138336490509,
+      "top_safety_layer": "model.layers.35",
+      "top_safety_sep": 0.7886328870124467
     }
   ],
   "seed": 42,
@@ -395,6 +831,13 @@
       "model_id": "Qwen/Qwen3-8B",
       "top_epistemic_layer": "model.layers.14",
       "top_safety_layer": "model.layers.24"
+    },
+    {
+      "angle_at_top_safety": 82.93974354227383,
+      "cosine_at_top_safety": 0.12291311038543512,
+      "model_id": "unsloth/gemma-2-9b-it-bnb-4bit",
+      "top_epistemic_layer": "model.layers.0",
+      "top_safety_layer": "model.layers.35"
     }
   ]
 }
