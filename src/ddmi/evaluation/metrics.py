@@ -82,14 +82,14 @@ class QuantizationDriftMetrics:
 
 def compute_cross_ablation_table(
     results: Sequence[CrossAblationMetrics],
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Format results as a flat table for easy display/export."""
     return [r.to_dict() for r in results]
 
 
 def compute_direction_comparison_table(
     results: Sequence[DirectionComparisonMetrics],
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Format direction comparison results as a flat table."""
     return [r.to_dict() for r in results]
 
