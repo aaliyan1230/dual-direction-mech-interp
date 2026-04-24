@@ -18,6 +18,26 @@ This repository provides a reproducible pipeline to:
 
 > When an instruction-tuned LLM says "I can't help with that" (safety) vs. "I don't know" (epistemic), are these mediated by the same geometric direction in activation space?
 
+## Current Findings
+
+The current checked-in results support a separation story rather than a shared dominant direction:
+
+- In Llama-3.1-8B-Instruct, the mean safety-vs-epistemic cosine across layers is `0.049`, with a maximum of `0.183` at `model.layers.20`.
+- The strongest safety ablation found in the sweep drops safety refusal from `0.98` to `0.16` while epistemic abstention rises slightly from `0.82` to `0.88`.
+- A held-out linear probe on the epistemic activations reaches `1.00` test accuracy at the selected layer `model.layers.9`.
+- Cross-family replication stays qualitatively consistent: Qwen3-8B shows cosine `-0.039` at its top safety layer, and Gemma-2-9B-Instruct shows cosine `0.123` at its top safety layer.
+
+## Useful Visuals And Outputs
+
+- Direction geometry figure: [artifacts/figures/fig1_direction_comparison.pdf](artifacts/figures/fig1_direction_comparison.pdf)
+- Cross-ablation figure: [artifacts/figures/fig2_cross_ablation.pdf](artifacts/figures/fig2_cross_ablation.pdf)
+- Quantization drift figure: [artifacts/figures/fig3_quantization_drift.pdf](artifacts/figures/fig3_quantization_drift.pdf)
+- Cross-model figure: [artifacts/figures/fig4_cross_model.pdf](artifacts/figures/fig4_cross_model.pdf)
+- Llama direction comparison artifact: [artifacts/directions/meta_llama_Llama_3.1_8B_Instruct_comparison.json](artifacts/directions/meta_llama_Llama_3.1_8B_Instruct_comparison.json)
+- Cross-ablation sweep artifact: [artifacts/cross_ablation/meta_llama_Llama_3.1_8B_Instruct_sweep.json](artifacts/cross_ablation/meta_llama_Llama_3.1_8B_Instruct_sweep.json)
+- Cross-model combined artifact: [artifacts/cross_model/combined_results.json](artifacts/cross_model/combined_results.json)
+- Epistemic probe artifact: [artifacts/probes/meta_llama_Llama_3.1_8B_Instruct_epistemic_probe.json](artifacts/probes/meta_llama_Llama_3.1_8B_Instruct_epistemic_probe.json)
+
 ## Setup
 
 ```bash

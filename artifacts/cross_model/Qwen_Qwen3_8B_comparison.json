@@ -327,7 +327,7 @@
     }
   ],
   "cosine_at_top_safety": -0.0392825346440682,
-  "elapsed_seconds": 160.6659698486328,
+  "elapsed_seconds": 111.6779146194458,
   "epistemic_top5": [
     {
       "name": "model.layers.14",
