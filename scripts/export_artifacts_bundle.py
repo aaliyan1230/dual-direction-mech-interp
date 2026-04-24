@@ -8,10 +8,11 @@ inspection and commit.
 from __future__ import annotations
 
 import argparse
+import json
 import subprocess
-from datetime import datetime, timezone
+from collections.abc import Iterable
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Iterable, List
 from zipfile import ZIP_DEFLATED, ZipFile
 
 
@@ -69,14 +70,14 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def iter_pattern_matches(repo_root: Path, patterns: Iterable[str]) -> List[Path]:
+def iter_pattern_matches(repo_root: Path, patterns: Iterable[str]) -> list[Path]:
     matches: set[Path] = set()
     for pattern in patterns:
         matches.update(path for path in repo_root.glob(pattern) if path.is_file())
     return sorted(matches)
 
 
-def iter_extra_paths(repo_root: Path, include_paths: Iterable[str]) -> List[Path]:
+def iter_extra_paths(repo_root: Path, include_paths: Iterable[str]) -> list[Path]:
     matches: set[Path] = set()
     for rel_path in include_paths:
         candidate = (repo_root / rel_path).resolve()
@@ -106,13 +107,13 @@ def resolve_git_commit(repo_root: Path) -> str | None:
 
 def build_manifest(
     repo_root: Path,
-    files: List[Path],
-    patterns: List[str],
-    include_paths: List[str],
+    files: list[Path],
+    patterns: list[str],
+    include_paths: list[str],
     label: str,
 ) -> dict[str, object]:
     return {
-        "created_at_utc": datetime.now(timezone.utc).isoformat(),
+        "created_at_utc": datetime.now(UTC).isoformat(),
         "label": label,
         "repo_root": str(repo_root),
         "git_commit": resolve_git_commit(repo_root),
@@ -122,13 +123,21 @@ def build_manifest(
     }
 
 
-def write_archive(output_path: Path, repo_root: Path, files: List[Path], manifest: dict[str, object]) -> None:
+def write_archive(
+    output_path: Path,
+    repo_root: Path,
+    files: list[Path],
+    manifest: dict[str, object],
+) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     with ZipFile(output_path, mode="w", compression=ZIP_DEFLATED) as archive:
         for path in files:
             archive.write(path, arcname=str(path.relative_to(repo_root)))
-        archive.writestr("manifest.json", __import__("json").dumps(manifest, indent=2, sort_keys=True) + "\n")
+        archive.writestr(
+            "manifest.json",
+            json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+        )
 
 
 def main() -> None:
