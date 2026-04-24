@@ -63,6 +63,35 @@ class ModelEditTarget:
     output_dim: int
 
 
+@dataclass
+class ActivationDirectionAblator:
+    """Apply directional ablation to module activations via forward hooks."""
+
+    module_names: Sequence[str]
+    direction: Sequence[float]
+    spec: EditSpec = field(default_factory=EditSpec)
+    _hooks: List[Any] = field(default_factory=list)
+
+    def attach(self, model: Any) -> "ActivationDirectionAblator":
+        modules = dict(model.named_modules())
+        for module_name in self.module_names:
+            if module_name not in modules:
+                raise KeyError(f"Module '{module_name}' not found in model")
+            module = modules[module_name]
+
+            def hook(_module: Any, _inputs: Any, output: Any, name: str = module_name) -> Any:
+                del name
+                return apply_directional_ablation_output(output, self.direction, self.spec)
+
+            self._hooks.append(module.register_forward_hook(hook))
+        return self
+
+    def close(self) -> None:
+        for hook in self._hooks:
+            hook.remove()
+        self._hooks.clear()
+
+
 def apply_directional_ablation_tensor(
     matrix: torch.Tensor,
     direction: Sequence[float],
@@ -119,6 +148,41 @@ def apply_directional_ablation_tensor(
             W_edited = W_edited * (orig_norms / new_norms)
 
     return W_edited.to(dtype)
+
+
+def apply_directional_ablation_activation(
+    tensor: torch.Tensor,
+    direction: Sequence[float],
+    spec: EditSpec = EditSpec(),
+) -> torch.Tensor:
+    """Remove a direction component from the last dimension of an activation tensor."""
+    spec.validate()
+
+    d = torch.tensor(direction, device=tensor.device, dtype=torch.float32)
+    d = d / d.norm().clamp(min=1e-12)
+
+    activations = tensor.float()
+    projection = torch.einsum("...d,d->...", activations, d)
+    edited = activations - spec.strength * projection.unsqueeze(-1) * d
+
+    if spec.norm_preserving:
+        orig_norms = activations.norm(dim=-1, keepdim=True)
+        new_norms = edited.norm(dim=-1, keepdim=True).clamp(min=1e-12)
+        edited = edited * (orig_norms / new_norms)
+
+    return edited.to(tensor.dtype)
+
+
+def apply_directional_ablation_output(
+    output: Any,
+    direction: Sequence[float],
+    spec: EditSpec = EditSpec(),
+) -> Any:
+    """Apply activation ablation to a module output, preserving tuple structure."""
+    if isinstance(output, tuple):
+        edited_first = apply_directional_ablation_activation(output[0], direction, spec)
+        return (edited_first, *output[1:])
+    return apply_directional_ablation_activation(output, direction, spec)
 
 
 def find_editable_modules(

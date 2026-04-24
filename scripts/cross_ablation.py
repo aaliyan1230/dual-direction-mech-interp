@@ -37,11 +37,8 @@ from ddmi.data.loaders import (
     prompts_to_text_list,
 )
 from ddmi.editing.apply_edit import (
+    ActivationDirectionAblator,
     EditSpec,
-    apply_direction_to_model,
-    find_editable_modules,
-    restore_module_weights,
-    snapshot_module_weights,
 )
 from ddmi.evaluation.detectors import (
     abstention_rate,
@@ -156,19 +153,11 @@ def main() -> None:
 
     logger.info("Eval prompts: %d safety, %d epistemic", len(safety_prompts), len(epistemic_prompts))
 
-    # Find editable modules
-    safety_layers = [int(r["name"].split(".")[-1]) for r in safety_ranked]
-    epistemic_layers = [int(r["name"].split(".")[-1]) for r in epistemic_ranked]
+    safety_target_layers = [r["name"] for r in safety_ranked]
+    epistemic_target_layers = [r["name"] for r in epistemic_ranked]
 
-    safety_targets = find_editable_modules(
-        model, target_module_types=args.module_type, layers=safety_layers,
-    )
-    epistemic_targets = find_editable_modules(
-        model, target_module_types=args.module_type, layers=epistemic_layers,
-    )
-
-    logger.info("Safety targets: %d modules", len(safety_targets))
-    logger.info("Epistemic targets: %d modules", len(epistemic_targets))
+    logger.info("Safety target layers: %s", ", ".join(safety_target_layers))
+    logger.info("Epistemic target layers: %s", ", ".join(epistemic_target_layers))
 
     results: List[Dict[str, Any]] = []
     spec = EditSpec(strength=args.strength)
@@ -188,8 +177,11 @@ def main() -> None:
 
     # === Condition 2: Ablate safety direction ===
     logger.info("\n=== Condition 2: ABLATE SAFETY DIRECTION ===")
-    snapshots = snapshot_module_weights(model, safety_targets)
-    apply_direction_to_model(model, safety_dir_vec, safety_targets, spec)
+    safety_ablator = ActivationDirectionAblator(
+        module_names=safety_target_layers,
+        direction=safety_dir_vec,
+        spec=spec,
+    ).attach(model)
 
     t0 = time.time()
     ablate_safety = evaluate_condition(model, tokenizer, safety_prompts, epistemic_prompts, gen_config)
@@ -207,12 +199,15 @@ def main() -> None:
         ablate_safety["epistemic_abstention_rate"] - baseline["epistemic_abstention_rate"],
     )
 
-    restore_module_weights(model, snapshots)
+    safety_ablator.close()
 
     # === Condition 3: Ablate epistemic direction ===
     logger.info("\n=== Condition 3: ABLATE EPISTEMIC DIRECTION ===")
-    snapshots = snapshot_module_weights(model, epistemic_targets)
-    apply_direction_to_model(model, epistemic_dir_vec, epistemic_targets, spec)
+    epistemic_ablator = ActivationDirectionAblator(
+        module_names=epistemic_target_layers,
+        direction=epistemic_dir_vec,
+        spec=spec,
+    ).attach(model)
 
     t0 = time.time()
     ablate_epistemic = evaluate_condition(model, tokenizer, safety_prompts, epistemic_prompts, gen_config)
@@ -230,7 +225,7 @@ def main() -> None:
         ablate_epistemic["epistemic_abstention_rate"] - baseline["epistemic_abstention_rate"],
     )
 
-    restore_module_weights(model, snapshots)
+    epistemic_ablator.close()
 
     # === Summary ===
     logger.info("\n=== CROSS-ABLATION SUMMARY ===")
@@ -266,7 +261,10 @@ def main() -> None:
             "eval_prompts": args.eval_prompts,
             "top_k_layers": args.top_k_layers,
             "strength": args.strength,
-            "module_types": args.module_type,
+            "target_layers": {
+                "safety": safety_target_layers,
+                "epistemic": epistemic_target_layers,
+            },
             "max_new_tokens": args.max_new_tokens,
             "seed": args.seed,
         },
