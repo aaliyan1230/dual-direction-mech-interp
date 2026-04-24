@@ -57,6 +57,14 @@ PRECISION_CONFIGS = {
 }
 
 
+def load_reference_direction(artifact: Dict[str, Any], layer_name: str) -> Dict[str, Any]:
+    """Extract the saved direction payload for one layer from a direction artifact."""
+    directions = artifact.get("directions", {})
+    if layer_name not in directions:
+        raise KeyError(f"Layer {layer_name!r} not found in artifact")
+    return directions[layer_name]
+
+
 def extract_directions_at_layer(
     model: Any,
     tokenizer: Any,
@@ -124,14 +132,33 @@ def main() -> None:
 
     # Determine target layer
     target_layer = args.target_layer
-    if target_layer is None and args.fp16_safety_artifact:
-        fp16_safety = read_json(args.fp16_safety_artifact)
-        target_layer = fp16_safety["ranked_layers"][0]["name"]
+    fp16_safety_artifact = read_json(args.fp16_safety_artifact) if args.fp16_safety_artifact else None
+    fp16_epistemic_artifact = read_json(args.fp16_epistemic_artifact) if args.fp16_epistemic_artifact else None
+
+    if target_layer is None and fp16_safety_artifact:
+        target_layer = fp16_safety_artifact["ranked_layers"][0]["name"]
         logger.info("Using top safety layer from FP16 artifact: %s", target_layer)
 
     results = {}
 
-    for precision, precision_kwargs in PRECISION_CONFIGS.items():
+    if fp16_safety_artifact and fp16_epistemic_artifact and target_layer is not None:
+        safety_ref = load_reference_direction(fp16_safety_artifact, target_layer)
+        epistemic_ref = load_reference_direction(fp16_epistemic_artifact, target_layer)
+        results["fp16"] = {
+            "safety_direction": safety_ref["direction"],
+            "epistemic_direction": epistemic_ref["direction"],
+            "safety_separability": safety_ref.get("separability"),
+            "epistemic_separability": epistemic_ref.get("separability"),
+            "safety_raw_norm": safety_ref.get("raw_norm"),
+            "epistemic_raw_norm": epistemic_ref.get("raw_norm"),
+        }
+        logger.info("Using provided FP16 artifacts as baseline for layer %s", target_layer)
+
+    precisions_to_run = PRECISION_CONFIGS.items()
+    if "fp16" in results:
+        precisions_to_run = ((name, cfg) for name, cfg in PRECISION_CONFIGS.items() if name != "fp16")
+
+    for precision, precision_kwargs in precisions_to_run:
         logger.info("\n=== Precision: %s ===", precision)
 
         config = ModelLoadConfig(model_id=args.model_id, **precision_kwargs, attn_implementation="eager")
