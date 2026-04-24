@@ -1,0 +1,61 @@
+{
+  "artifact_type": "quantization_sweep",
+  "drift_table": [
+    {
+      "epistemic_cosine_vs_fp16": 1.0,
+      "epistemic_norm_ratio": 1.0,
+      "epistemic_separability": null,
+      "precision": "fp16",
+      "safety_cosine_vs_fp16": 1.0,
+      "safety_norm_ratio": 1.0,
+      "safety_separability": null
+    },
+    {
+      "epistemic_cosine_vs_fp16": 0.977554740363933,
+      "epistemic_norm_ratio": 1.0000000000000002,
+      "epistemic_separability": 0.48698970129851826,
+      "precision": "bnb_nf4",
+      "safety_cosine_vs_fp16": 0.9940238375404946,
+      "safety_norm_ratio": 1.0,
+      "safety_separability": 0.7604332676808384
+    },
+    {
+      "epistemic_cosine_vs_fp16": 0.9349445736576494,
+      "epistemic_norm_ratio": 1.0000000000000002,
+      "epistemic_separability": 0.4439153815922095,
+      "precision": "bnb_int8",
+      "safety_cosine_vs_fp16": 0.9616698806817828,
+      "safety_norm_ratio": 1.0,
+      "safety_separability": 0.7812429024843374
+    }
+  ],
+  "model_id": "meta-llama/Llama-3.1-8B-Instruct",
+  "per_precision_results": {
+    "bnb_int8": {
+      "epistemic_raw_norm": 9.408781162365017,
+      "epistemic_separability": 0.4439153815922095,
+      "safety_raw_norm": 14.166911662662557,
+      "safety_separability": 0.7812429024843374
+    },
+    "bnb_nf4": {
+      "epistemic_raw_norm": 9.420732857807923,
+      "epistemic_separability": 0.48698970129851826,
+      "safety_raw_norm": 13.244638956622929,
+      "safety_separability": 0.7604332676808384
+    },
+    "fp16": {
+      "epistemic_raw_norm": null,
+      "epistemic_separability": null,
+      "safety_raw_norm": null,
+      "safety_separability": null
+    }
+  },
+  "precisions": [
+    "fp16",
+    "bnb_nf4",
+    "bnb_int8"
+  ],
+  "prompt_limit": 100,
+  "seed": 42,
+  "target_layer": "model.layers.22"
+}
