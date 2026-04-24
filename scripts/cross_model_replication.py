@@ -52,8 +52,8 @@ logger = configure_logging(name="cross_model")
 
 DEFAULT_MODELS = [
     "meta-llama/Llama-3.1-8B-Instruct",
-    "Qwen/Qwen2.5-7B-Instruct",
-    "google/gemma-2-2b-it",
+    "Qwen/Qwen3-8B",
+    "microsoft/Phi-4-mini-instruct",
 ]
 
 
@@ -67,11 +67,14 @@ def run_single_model(
     max_input_length: int = 512,
 ) -> Dict[str, Any]:
     """Extract directions and compute geometry for a single model."""
+    # Phi-4-mini ships custom modeling code
+    needs_trust = "phi" in model_id.lower()
     config = ModelLoadConfig(
         model_id=model_id,
         load_in_4bit=load_in_4bit,
         torch_dtype="float16",
         attn_implementation="eager",
+        trust_remote_code=needs_trust,
     )
 
     logger.info("Loading model: %s", model_id)

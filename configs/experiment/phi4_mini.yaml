@@ -1,9 +1,10 @@
-# Experiment configuration for Qwen2.5-7B-Instruct
+# Experiment configuration for Phi-4-mini-instruct
 model:
-  model_id: Qwen/Qwen2.5-7B-Instruct
+  model_id: microsoft/Phi-4-mini-instruct
   load_in_4bit: true
   torch_dtype: float16
   attn_implementation: eager
+  trust_remote_code: true
 
 data:
   safety_limit: 200

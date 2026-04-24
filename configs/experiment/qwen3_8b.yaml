@@ -1,6 +1,6 @@
-# Experiment configuration for Gemma-2-2B-IT
+# Experiment configuration for Qwen3-8B
 model:
-  model_id: google/gemma-2-2b-it
+  model_id: Qwen/Qwen3-8B
   load_in_4bit: true
   torch_dtype: float16
   attn_implementation: eager
