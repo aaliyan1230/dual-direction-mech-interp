@@ -9,7 +9,7 @@ description = "Disentangling safety-refusal and epistemic-abstention directions 
 readme = "README.md"
 requires-python = ">=3.9"
 license = {text = "MIT"}
-authors = [{name = "Aaliyan Shaikh", email = "aaliyan1230@gmail.com"}]
+authors = [{name = "Muhammad Aaliyan", email = "aaliyan1230@gmail.com"}]
 
 dependencies = [
     "torch>=2.1",

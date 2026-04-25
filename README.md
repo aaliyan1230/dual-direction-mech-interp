@@ -171,9 +171,9 @@ All experiments run on **2× NVIDIA T4 (16 GB each)** — designed for Kaggle fr
 If you find this work useful, please cite:
 
 ```bibtex
-@misc{shaikh2026dualdirection,
+@misc{aaliyan2026dualdirection,
     title={Two Refusals or One? Disentangling Safety and Epistemic Abstention Directions Under Quantization},
-    author={Shaikh, Aaliyan},
+    author={Muhammad Aaliyan},
     year={2026},
     note={Preprint}
 }
