@@ -172,12 +172,16 @@ If you find this work useful, please cite:
 
 ```bibtex
 @misc{aaliyan2026dualdirection,
-    title={Two Refusals or One? Disentangling Safety and Epistemic Abstention Directions Under Quantization},
+    title={Two Refusals or One? Disentangling Safety and Epistemic Abstention Directions in Language Model Activations},
     author={Muhammad Aaliyan},
     year={2026},
-    note={Preprint}
+    howpublished={Zenodo preprint, \url{https://zenodo.org/records/20009857}},
+    doi={10.5281/zenodo.20009857}
 }
 ```
+
+**Preprint:** https://zenodo.org/records/20009857  
+**DOI:** `10.5281/zenodo.20009857`
 
 ## License
 
